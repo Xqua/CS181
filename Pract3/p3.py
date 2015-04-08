@@ -2,8 +2,9 @@
 
 import numpy as np
 import pandas as pd
-# import matplotlib.pyplot as plt
-# import prettyplotlib as ppl
+import matplotlib.pyplot as plt
+import prettyplotlib as ppl
+from collection import Counter
 
 
 class MLearn:
@@ -25,5 +26,18 @@ class MLearn:
             ai = artists.index(a)
             mat[ui][ai] = df['plays'][i]
         return mat
+
+    def Plot_Histogram(self):
+        c = Counter()
+        for i in range(len(self.df)):
+            u = self.df['user'][i]
+            c[u] += self.df['plays'][i]
+        res = []
+        for u in c.keys():
+            res.append(c[u])
+        ppl.hist(np.log10(res), bins=100)
+        plt.xlabel('Log10(Number of play)')
+        plt.ylabel('N')
+        plt.show()
 
 M = MLearn()
