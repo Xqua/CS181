@@ -4,6 +4,9 @@
 # %paste
 # which is the magic command
 
+import numpy as np
+import pandas as pd
+
 
 def test1(s):
     for i in range(1000):
@@ -51,6 +54,8 @@ for i in range(N_users):
     users[users_l[i]] = i
 for i in range(N_artists):
     artists[artists_l[i]] = i
+mat = np.zeros((N_users, N_artists))
+
 
 %timeit - n 1 - r 3 test1(ds)
 %timeit - n 1 - r 3 test2(ds)
