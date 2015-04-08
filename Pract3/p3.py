@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import prettyplotlib as ppl
 from collections import Counter
 
-#Comment aded by yiqun
+# Comment aded by yiqun
+
 
 class MLearn:
 
