@@ -11,7 +11,7 @@ from collections import Counter
 
 class MLearn:
 
-    def __init__(self, filename='train.csv', N_point=None):
+    def __init__(self, filename='train.csv', filename_test='test.csv', N_point=None, test=True):
         self.df = pd.read_csv(filename)
         if N_point:
             self.df = self.df[:N_point]
@@ -31,8 +31,44 @@ class MLearn:
             self.artists[self.artists_l[i]] = i
         # self.matrix = self.Build_Matrix()
         self.dataset = self.Build_Dictionary()
+        if test:
+            self.dataset, self.test_dataset = self.Split_dataset()
+        else:
+            self.df_test = pd.read_csv(filename_test)
+            self.test_dataset = self.Build_Dictionary(test=True)
         # self.mat_p, self.mat_e = self.Build_Pearson_Euclidian_Matrix
         self.prediction = {}
+
+    def Build_Prediction(self):
+        i = 0
+        tot = len(self.test_dataset.keys())
+        for user in self.test_dataset.keys():
+            if i % 1000 == 0:
+                print "Done %s users, %s to go ..." % (i, tot - i)
+            self.prediction[user] = self.User_cond_proba(user)
+
+    def Score_Prediction(self):
+        RMSE = 0.0
+        tot = 0.0
+        for user in self.test_dataset.keys():
+            for artist in self.test_dataset[user].keys():
+                if artist in self.prediction[user]:
+                    N = self.prediction[user][artist]
+                else:
+                    N = 0.0
+                tot += 1
+                RMSE = (self.test_dataset[user][artist] - N) ** 2
+        RMSE = np.sqrt(RMSE / tot)
+
+    def Split_dataset(self):
+        ds, test = {}, {}
+        u = self.dataset.keys()
+        np.random.shuffle(u)
+        for i in u[:int(len(u) * 0.80)]:
+            ds[i] = self.dataset[i]
+        for i in u[int(len(u) * 0.80):]:
+            test[i] = self.dataset[i]
+        return ds, test
 
     def Build_Matrix(self):
         mat = np.zeros((self.N_users, self.N_artists))
@@ -46,16 +82,23 @@ class MLearn:
             mat[ui][ai] = self.df['plays'][i]
         return mat
 
-    def Build_Dictionary(self):
+    def Build_Dictionary(self, test=False):
         dic = {}
         for i in range(len(self.df)):
             if i % 10000 == 0:
                 print len(self.df) - i, "to go ..."
-            u = self.df['user'][i]
-            a = self.df['artist'][i]
+            if test:
+                u = self.df_test['user'][i]
+                a = self.df_test['artist'][i]
+            else:
+                u = self.df['user'][i]
+                a = self.df['artist'][i]
             if u not in dic:
                 dic[u] = {}
-            dic[u][a] = self.df['plays'][i]
+            if test:
+                dic[u][a] = 0
+            else:
+                dic[u][a] = self.df['plays'][i]
         return dic
 
     def Plot_Histogram(self):
@@ -83,7 +126,7 @@ class MLearn:
                 raise NameError('Method has to be either Pearson of Euclidian')
             p_u1.append((p, user2))
         p_u1 = sorted(p_u1, key=lambda pu: pu[0], reverse=True)
-        print p_u1[:100]
+        # print p_u1[:100]
         tot_p = 0
         for pu in p_u1:
             p = pu[0]
@@ -95,8 +138,8 @@ class MLearn:
                         res[artist] = []
                     res[artist].append((self.dataset[user2][artist] / float(self.N_Play_users[user2])) * p)
         tot_p = float(tot_p)
-        print tot_p
-        print res
+        # print tot_p
+        # print res
         for artist in res.keys():
             score = np.sum(res[artist]) / tot_p * self.N_Play_users[user1]  # Here Expected value, (think of MEDIAN or MEAN that is the Question)
             print artist, score
@@ -163,4 +206,4 @@ class MLearn:
 
 M = MLearn(N_point=1000000)
 # M = MLearn()
-c = M.User_cond_proba(M.users_l[3])
+# c = M.User_cond_proba(M.users_l[3])
