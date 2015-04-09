@@ -46,6 +46,7 @@ class MLearn:
             if i % 1000 == 0:
                 print "Done %s users, %s to go ..." % (i, tot - i)
             self.prediction[user] = self.User_cond_proba(user)
+            i += 1
 
     def Score_Prediction(self):
         RMSE = 0.0
@@ -57,20 +58,27 @@ class MLearn:
                 else:
                     N = 0.0
                 tot += 1
-                RMSE = (self.test_dataset[user][artist] - N) ** 2
-        RMSE = np.sqrt(RMSE / tot)
+                RMSE = abs(self.test_dataset[user][artist] - N)
+        RMSE = RMSE / tot
+        return RMSE
 
     def Split_dataset(self):
-        ds, test = self.dataset, {}
-        N = len(self.df) * 0.20
-        n = 0
-        while n < N:
-            u = np.random.choice(self.users_l)
-            a = np.random.choice(self.dataset[u].keys())
-            if len(self.dataset[u].keys()) > 2:
+        ds, test = {}, {}
+        for u in self.users_l:
+            if len(self.dataset[u].keys()) > 1:
+                a = np.random.choice(self.dataset[u].keys())
+                test[u] = {}
                 test[u][a] = self.dataset[u][a]
-                del ds[u][a]
-                n += 1
+                for artist in self.dataset[u].keys():
+                    if artist != a:
+                        if u not in ds:
+                            ds[u] = {}
+                        ds[u][artist] = self.dataset[u][artist]
+            else:
+                for artist in self.dataset[u].keys():
+                    if u not in ds:
+                        ds[u] = {}
+                    ds[u][artist] = self.dataset[u][artist]
         return ds, test
 
     def Build_Matrix(self):
@@ -207,6 +215,9 @@ class MLearn:
         r = num / den
         return abs(r)
 
-M = MLearn(N_point=1000000)
-# M = MLearn()
+# M = MLearn(N_point=10000)
+M = MLearn()
+M.Build_Prediction()
+S = M.Score_Prediction()
+print S
 # c = M.User_cond_proba(M.users_l[3])
