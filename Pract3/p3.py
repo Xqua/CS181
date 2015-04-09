@@ -41,8 +41,8 @@ class MLearn:
 
     def Build_Prediction(self):
         i = 0
-        tot = len(self.test_dataset.keys())
-        for user in self.test_dataset.keys():
+        tot = len(self.dataset.keys())
+        for user in self.dataset.keys():
             if i % 1000 == 0:
                 print "Done %s users, %s to go ..." % (i, tot - i)
             self.prediction[user] = self.User_cond_proba(user)
@@ -61,13 +61,16 @@ class MLearn:
         RMSE = np.sqrt(RMSE / tot)
 
     def Split_dataset(self):
-        ds, test = {}, {}
-        u = self.dataset.keys()
-        np.random.shuffle(u)
-        for i in u[:int(len(u) * 0.80)]:
-            ds[i] = self.dataset[i]
-        for i in u[int(len(u) * 0.80):]:
-            test[i] = self.dataset[i]
+        ds, test = self.dataset, {}
+        N = len(self.df) * 0.20
+        n = 0
+        while n < N:
+            u = np.random.choice(self.users_l)
+            a = np.random.choice(self.dataset[u].keys())
+            if len(self.dataset[u].keys()) > 2:
+                test[u][a] = self.dataset[u][a]
+                del ds[u][a]
+                n += 1
         return ds, test
 
     def Build_Matrix(self):
