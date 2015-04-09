@@ -150,7 +150,6 @@ class MLearn:
         tot_p = float(tot_p)
         for artist in res.keys():
             score = round(np.sum(res[artist]) / tot_p * self.N_Play_users[user1], 0)  # Here Expected value, (think of MEDIAN or MEAN that is the Question)
-            # print artist, score
             if score < 1:
                 del res[artist]
             else:
