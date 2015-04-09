@@ -137,7 +137,6 @@ class MLearn:
                 raise NameError('Method has to be either Pearson of Euclidian')
             p_u1.append((p, user2))
         p_u1 = sorted(p_u1, key=lambda pu: pu[0], reverse=True)
-        # print p_u1[:100]
         tot_p = 0
         for pu in p_u1:
             p = pu[0]
@@ -149,11 +148,9 @@ class MLearn:
                         res[artist] = []
                     res[artist].append((self.dataset[user2][artist] / float(self.N_Play_users[user2])) * p)
         tot_p = float(tot_p)
-        # print tot_p
-        # print res
         for artist in res.keys():
-            score = np.sum(res[artist]) / tot_p * self.N_Play_users[user1]  # Here Expected value, (think of MEDIAN or MEAN that is the Question)
-            print artist, score
+            score = round(np.sum(res[artist]) / tot_p * self.N_Play_users[user1], 0)  # Here Expected value, (think of MEDIAN or MEAN that is the Question)
+            # print artist, score
             if score < 1:
                 del res[artist]
             else:
@@ -198,25 +195,21 @@ class MLearn:
         # Add up all the preferences
         sum1 = sum([self.dataset[user1][it] for it in si])
         sum2 = sum([self.dataset[user2][it] for it in si])
-        # print sum1,sum2
         # Sum up the squares
         sum1Sq = sum([pow(self.dataset[user1][it], 2) for it in si])
         sum2Sq = sum([pow(self.dataset[user2][it], 2) for it in si])
-        # print sum1Sq, sum2Sq
         # Sum up the products
         pSum = sum([self.dataset[user1][it] * self.dataset[user2][it] for it in si])
-        # print pSum, (sum1 * sum2)
         # Calculate Pearson score
         num = pSum - ((sum1 * sum2) / n)
         den = np.sqrt((sum1Sq - pow(sum1, 2) / n) * (sum2Sq - pow(sum2, 2) / n))
-        # print n, num, den
         if den == 0:
             return 0.0
         r = num / den
         return abs(r)
 
-# M = MLearn(N_point=10000)
-M = MLearn()
+M = MLearn(N_point=2000000)
+# M = MLearn()
 M.Build_Prediction()
 S = M.Score_Prediction()
 print S
