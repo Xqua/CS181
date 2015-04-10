@@ -5,6 +5,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import prettyplotlib as ppl
 from collections import Counter
+import time
+from scipy.sparse import csr_matrix
+
 
 # Comment aded by yiqun
 
@@ -29,23 +32,30 @@ class MLearn:
             self.users[self.users_l[i]] = i
         for i in range(self.N_artists):
             self.artists[self.artists_l[i]] = i
-        # self.matrix = self.Build_Matrix()
-        self.dataset = self.Build_Dictionary()
-        if test:
-            self.dataset, self.test_dataset = self.Split_dataset()
-        else:
-            self.df_test = pd.read_csv(filename_test)
-            self.test_dataset = self.Build_Dictionary(test=True)
-        # self.mat_p, self.mat_e = self.Build_Pearson_Euclidian_Matrix
-        self.prediction = {}
+        self.matrix = self.Build_Matrix()
+        # self.dataset = self.Build_Dictionary()
+        # if test:
+        #     self.dataset, self.test_dataset = self.Split_dataset()
+        # else:
+        #     self.df_test = pd.read_csv(filename_test)
+        #     self.test_dataset = self.Build_Dictionary(test=True)
+        # # self.mat_p, self.mat_e = self.Build_Pearson_Euclidian_Matrix
+        # self.prediction = {}
 
     def Build_Prediction(self):
         i = 0
         tot = len(self.dataset.keys())
+        tcounter = [0]
         for user in self.dataset.keys():
-            if i % 1000 == 0:
+            if i % 100 == 0:
                 print "Done %s users, %s to go ..." % (i, tot - i)
+                print "time per user = %s" % np.mean(tcounter)
+                print "Remainting time = %s" % ((tot - i) * np.mean(tcounter))
+                tcounter = []
+            t0 = time.time()
             self.prediction[user] = self.User_cond_proba(user)
+            t1 = time.time()
+            tcounter.append(t1 - t0)
             i += 1
 
     def Score_Prediction(self):
@@ -91,7 +101,7 @@ class MLearn:
             ui = self.users[u]
             ai = self.artists[a]
             mat[ui][ai] = self.df['plays'][i]
-        return mat
+        return csr_matrix(mat)
 
     def Build_Dictionary(self, test=False):
         dic = {}
@@ -192,24 +202,18 @@ class MLearn:
         if n == 0:
             return 0
         # Add up all the preferences
-        sum1 = sum([self.dataset[user1][it] for it in si])
-        sum2 = sum([self.dataset[user2][it] for it in si])
+        sum1 = np.sum([self.dataset[user1][it] for it in si])
+        sum2 = np.sum([self.dataset[user2][it] for it in si])
         # Sum up the squares
-        sum1Sq = sum([pow(self.dataset[user1][it], 2) for it in si])
-        sum2Sq = sum([pow(self.dataset[user2][it], 2) for it in si])
+        sum1Sq = np.sum([self.dataset[user1][it] ** 2 for it in si])
+        sum2Sq = np.sum([self.dataset[user2][it] ** 2 for it in si])
         # Sum up the products
-        pSum = sum([self.dataset[user1][it] * self.dataset[user2][it] for it in si])
+        pSum = np.sum([self.dataset[user1][it] * self.dataset[user2][it] for it in si])
         # Calculate Pearson score
         num = pSum - ((sum1 * sum2) / n)
-        den = np.sqrt((sum1Sq - pow(sum1, 2) / n) * (sum2Sq - pow(sum2, 2) / n))
+        den = np.sqrt((sum1Sq - sum1 ** 2 / n) * (sum2Sq - sum2 ** 2 / n))
         if den == 0:
             return 0.0
         r = num / den
         return abs(r) 
 
-M = MLearn(N_point=2000000)
-# M = MLearn()
-M.Build_Prediction()
-S = M.Score_Prediction()
-print S
-# c = M.User_cond_proba(M.users_l[3])
