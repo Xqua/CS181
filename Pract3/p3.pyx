@@ -252,7 +252,7 @@ class MLearn:
         if den == 0:
             return 0.0
         r = num / den
-        return abs(r)
+        return r
 
     def Measure_Overlap(self):
         # Get the list of mutually rated items
